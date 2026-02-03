@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+<!-- que se vea bonito y por columnas el menu de las incidencias-->
+    <record id="sport_issue_view_tree" model="ir.ui.view">
+        <field name="name">sport_issue.view.tree</field>
+        <field name="model">sport.issue</field>
+        <field name="arch" type="xml">
+<!-- multi edit = 1 és para marcar múltiples issues y editarlos a la vez-->            
+            <tree multi_edit="1" string="Issues">
+<!-- handle es el widget para poder mover/ordenar las incidencias de forma interactiva-->
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+<!--optional para elegir si queremos verlo o no, icono arriba derecha-->                
+                <field name="date" optional="show"/>
+                <field name="user_id" optional="hide"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="sport_issue_view_form" model="ir.ui.view">
+<!-- form és lo que se va a ver al crear una incidencia-->
+        <field name="name">sport_issue.view.form</field>
+        <field name="model">sport.issue</field>
+        <field name="arch" type="xml">
+            <form string="Issues">
+                <header>
+<!-- El menu transaccional (arriba a la derecha)que muestran el estando en el que se encuentra-->
+                    <field name="state" widget="statusbar" statusbar_visible="draft,open,done"/>
+<!-- Botones to open, draft y done--> 
+                    <button string="To draft" name="action_draft" type="object" class="oe_highlight"/>
+                    <button string="To open" invisible="state not in ('draft')" name="action_open" type="object" class="oe_highlight"/>
+                    <button string="Done" invisible="state not in ('open')" name="action_done" type="object" class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+<!-- El título de la página-->
+                            <field name="name" placeholder="Issue Name"></field>                       
+                        </h1>
+                    </div>
+
+                    <group>
+<!-- Aquí, el primer bloque de group és lo que va a mostrarse a la izquierda y el segundo bloque lo que se muestra a la derecha en la interfaz final-->
+                        <group>
+                            <field name="user_id"/>
+                            <field name="clinic_id"/>
+                        </group>
+
+                        <group>
+                            <field name="date"/>
+<!-- boolean togle, casilla de check, si check = true, no check = false-->
+                            <field name="tag_ids" widget="many2many_tags"/>
+                            <field name="assistance" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+<!-- Notebook és el menu de selección de pestañas, en este ejemplo, Descripción y Solución -->
+                    <notebook>
+                        <page name="description" string="Description">
+                            <field name="description"/>
+                        </page>
+                        <page name="solution" string="Solution">
+                            <field name="solution"/>
+                        </page>
+
+                    </notebook>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>
