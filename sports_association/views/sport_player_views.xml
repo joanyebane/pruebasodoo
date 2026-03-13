@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="sport_player_view_tree" model="ir.ui.view">
+        <field eval="100" name="priority"/>
+        <field name="name">sport_player.view.tree</field>
+        <field name="model">sport.player</field>
+        <field name="arch" type="xml">
+            <tree string="Players">
+                <field name="name"/>
+                <field name="team_id"/>
+                <field name="age"/>
+                <field name="position"/>
+                
+                <field name="starter" widget="boolean_toggle" />
+            </tree>
+        </field>
+    </record>
+<!-- vista simple, la vista con menos prioridad será la que se muestre-->
+    <record id="sport_player_view_simple_tree" model="ir.ui.view">
+        <field name="name">sport_player.view.simple.tree</field>
+        <field eval="200" name="priority"/>
+        <field name="model">sport.player</field>
+        <field name="arch" type="xml">
+            <tree string="Players">
+                <field name="name"/>
+                <field name="age"/>
+
+            </tree>
+        </field>
+    </record>
+
+    <record id="sport_player_view_form" model="ir.ui.view">
+        <field name="name">sport_player.view.form</field>
+        <field eval="100" name="priority"/>
+        <field name="model">sport.player</field>
+        <field name="arch" type="xml">
+            <form string="Player">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="birthdate"/>
+                            <field name="age"/>
+                            <field name="position"/>
+                            <!-- estos campos se heredan de contactos y rellenandolos en jugadores, se rellenan automaticamente en el contacto -->
+                            <field name="city"/>
+                            <field name="street"/>
+                            <field name="zip"/>
+                        </group>
+                        <group>
+                            <field name="team_id"/>
+                            <field name="sport_name"/>
+                            <field name="starter" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sport_player_view_simple_form" model="ir.ui.view">
+        <field eval="200" name="priority"/>
+        <field name="name">sport_player.simple.view.form</field>
+        <field name="model">sport.player</field>
+        <field name="arch" type="xml">
+            <form string="Player">
+                <header>
+                    <button string="Create Issue" name="%(action_sport_create_issue)d" type="action" class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <field name="name"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sport_player_action" model="ir.actions.act_window">
+        <field name="name">Sport Player</field>
+        <field name="res_model">sport.player</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new sport player
+            </p>
+        </field>
+    </record>
+
+    <record id="sport_player_view_search" model="ir.ui.view">
+        <field name="name">sport_player.view.search</field>
+        <field name="model">sport.player</field>
+        <field name="arch" type="xml">
+            <search string="Players">
+                <field name="name" />
+                <field name="sport_name" />
+                <field name="team_id" />
+                <filter name="starter" string="Starter" domain="[('starter', '=', True)]" />
+                <filter name="non_starter" string="Non Starter" domain="[('starter', '=', False)]"/>
+                <filter name="age" string="Age" context="{'group_by':'age'}"/>
+                <filter string="Birthdate" name="birthdate" context="{'group_by':'birthdate'}"/>
+                <filter string="Sport" name="sport" context="{'group_by':'sport_name'}"/>
+            </search>
+        </field>
+    </record>
+
+</odoo>
