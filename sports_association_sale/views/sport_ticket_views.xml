@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<!-- esta vista hereda de la vista del ticket de deporte para añadir el campo del pedido de venta 
+al que está relacionado el ticket, tanto en la vista de árbol como en la vista de formulario -->
+    <record id="sport_ticket_view_tree" model="ir.ui.view">
+        <field name="name">sport.ticket.view.tree</field>
+        <field name="inherit_id" ref="sports_association.sport_ticket_view_tree"/>
+        <field name="model">sport.ticket</field>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="sale_order_id"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="sport_ticket_view_form" model="ir.ui.view">
+        <field name="name">sport.ticket.view.form</field>
+        <field name="inherit_id" ref="sports_association.sport_ticket_view_form"/>
+        <field name="model">sport.ticket</field>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="sale_order_id"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>
