@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_incident_user,access.incident.user,model_incidencias_request,incidencias.group_incident_user,1,1,1,0
+access_incident_manager,access.incident.manager,model_incidencias_request,incidencias.group_incident_manager,1,1,1,1
+access_incident_reply_user,access.incident.reply.user,model_incidencias_reply,incidencias.group_incident_user,1,1,1,0
+access_incident_reply_manager,access.incident.reply.manager,model_incidencias_reply,incidencias.group_incident_manager,1,1,1,1
