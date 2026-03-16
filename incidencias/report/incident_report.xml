@@ -16,12 +16,14 @@
                     <div class="page">
                         <h2>Incidencia <span t-field="o.name"/></h2>
                         <p><strong>Asunto:</strong> <span t-field="o.subject"/></p>
+                        <p><strong>Prioridad:</strong> <span t-field="o.priority"/></p>
                         <p><strong>Solicitante:</strong> <span t-field="o.requester_id"/></p>
                         <p><strong>Responsable:</strong> <span t-field="o.assigned_id"/></p>
                         <p><strong>Estado:</strong> <span t-field="o.state"/></p>
                         <p><strong>Fecha solicitud:</strong> <span t-field="o.request_date"/></p>
                         <p><strong>Inicio:</strong> <span t-field="o.start_date"/></p>
                         <p><strong>Fin:</strong> <span t-field="o.end_date"/></p>
+                        <p><strong>Tiempo estimado:</strong> <span t-field="o.estimated_time"/></p>
                         <p><strong>Horas estimadas:</strong> <span t-field="o.estimated_hours"/></p>
                         <p><strong>Horas dedicadas:</strong> <span t-field="o.spent_hours"/></p>
                         <h3>Descripción</h3>
