@@ -1,0 +1,8 @@
+<odoo>
+    <record id="seq_incidencias_request" model="ir.sequence">
+        <field name="name">Incidencia</field>
+        <field name="code">incidencias.request</field>
+        <field name="prefix">INC%(y)s</field>
+        <field name="padding">4</field>
+    </record>
+</odoo>
