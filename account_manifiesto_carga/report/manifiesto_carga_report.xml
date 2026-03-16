@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="paperformat_manifiesto_carga" model="report.paperformat">
+        <field name="name">Manifiesto de carga A4 horizontal</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">20</field>
+        <field name="margin_bottom">12</field>
+        <field name="margin_left">8</field>
+        <field name="margin_right">8</field>
+        <field name="header_line" eval="False"/>
+        <field name="dpi">90</field>
+    </record>
+
+    <template id="report_manifiesto_carga">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <h1 class="text-center" style="font-size: 34px; font-weight: 700; margin-bottom: 18px;">Manifiesto de carga</h1>
+
+                    <table class="table table-sm table-borderless mb-3" style="font-size: 13px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%;">Fecha</th>
+                                <th style="width: 35%;">Ordenante</th>
+                                <th style="width: 45%;">Expediciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <span t-esc="(docs and docs[0].invoice_date) or ''"/>
+                                </td>
+                                <td>
+                                    <span t-esc="(docs and docs[0].partner_id.display_name) or ''"/>
+                                </td>
+                                <td>
+                                    <span t-esc="', '.join(docs.mapped('name'))"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <table class="table table-sm table-bordered" style="font-size: 12px;">
+                        <thead>
+                            <tr>
+                                <th>Expedición</th>
+                                <th>Ref</th>
+                                <th>Servicio</th>
+                                <th>Destinatario</th>
+                                <th>Dirección</th>
+                                <th class="text-end">Bultos</th>
+                                <th class="text-end">Peso</th>
+                                <th class="text-end">Vol</th>
+                                <th class="text-end">Reemb</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="docs" t-as="o">
+                                <tr>
+                                    <td><span t-esc="o.name"/></td>
+                                    <td><span t-esc="o.ref or o.payment_reference or ''"/></td>
+                                    <td>
+                                        <span t-esc="', '.join(o.invoice_line_ids.mapped('name'))"/>
+                                    </td>
+                                    <td><span t-esc="o.partner_id.display_name"/></td>
+                                    <td><span t-esc="o.partner_id.contact_address or ''"/></td>
+                                    <td class="text-end"><span t-esc="getattr(o, 'x_bultos', '')"/></td>
+                                    <td class="text-end"><span t-esc="getattr(o, 'x_peso', '')"/></td>
+                                    <td class="text-end"><span t-esc="getattr(o, 'x_volumen', '')"/></td>
+                                    <td class="text-end"><span t-esc="getattr(o, 'x_reembolso', '')"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+
+                    <div class="row mt-5" style="font-size: 12px;">
+                        <div class="col-6">
+                            <p style="font-weight: 700; margin-bottom: 26px;">Conformidad de las partes</p>
+                            <div style="border: 1px solid #000; min-height: 130px; padding: 12px;">
+                                <p style="margin-bottom: 10px;"><strong>Transportista</strong></p>
+                                <p style="margin-bottom: 30px;">Firma/Sello</p>
+                                <p style="margin-bottom: 0;">NIF</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <p style="font-weight: 700; margin-bottom: 26px;">&#160;</p>
+                            <div style="border: 1px solid #000; min-height: 130px; padding: 12px;">
+                                <p style="margin-bottom: 10px;"><strong>CLIENTE</strong></p>
+                                <p style="margin-bottom: 30px;">Firma/Sello</p>
+                                <p style="margin-bottom: 0;">NIF</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_manifiesto_carga" model="ir.actions.report">
+        <field name="name">Manifiesto de carga</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">account_manifiesto_carga.report_manifiesto_carga</field>
+        <field name="report_file">account_manifiesto_carga.report_manifiesto_carga</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="paperformat_manifiesto_carga"/>
+        <field name="print_report_name">'Manifiesto de carga - %s' % (object.name or '')</field>
+    </record>
+</odoo>
