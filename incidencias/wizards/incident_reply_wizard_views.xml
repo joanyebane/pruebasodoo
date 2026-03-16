@@ -6,6 +6,7 @@
             <form string="Responder incidencia">
                 <group>
                     <field name="message"/>
+                    <field name="hours"/>
                 </group>
                 <footer>
                     <button name="action_add_reply" type="object" string="Guardar" class="btn-primary"/>
@@ -20,6 +21,5 @@
         <field name="res_model">incidencias.reply.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
-        <field name="groups_id" eval="[(4, ref('incidencias.group_incident_manager'))]"/>
     </record>
 </odoo>
