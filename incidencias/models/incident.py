@@ -13,7 +13,7 @@ class IncidentRequest(models.Model):
     requester_id = fields.Many2one("res.users", string="Solicitante", default=lambda self: self.env.user, required=True, tracking=True)
     assigned_id = fields.Many2one("res.users", string="Responsable", tracking=True)
     request_date = fields.Datetime(string="Fecha de solicitud", default=fields.Datetime.now, required=True, tracking=True)
-    start_date = fields.Datetime(string="Inicio")
+    start_date = fields.Datetime(string="Inici")
     end_date = fields.Datetime(string="Fin")
     estimated_hours = fields.Float(string="Horas estimadas")
     spent_hours = fields.Float(string="Horas dedicadas", compute="_compute_spent_hours", store=True)
