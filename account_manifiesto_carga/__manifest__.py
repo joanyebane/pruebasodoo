@@ -1,7 +1,7 @@
 {
     "name": "Manifiesto de carga para facturas",
     "summary": "Añade el informe de manifiesto de carga en facturas de cliente.",
-    "version": "17.0.1.0.0",
+    "version": "16.0.1.0.0",
     "category": "Accounting",
     "author": "Custom",
     "license": "LGPL-3",

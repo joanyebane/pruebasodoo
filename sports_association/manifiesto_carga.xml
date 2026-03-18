@@ -1,0 +1,405 @@
+
+<!--
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="paperformat_manifiesto_carga" model="report.paperformat">
+        <field name="name">Manifiesto de carga A4 horizontal</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">20</field>
+        <field name="margin_bottom">12</field>
+        <field name="margin_left">8</field>
+        <field name="margin_right">8</field>
+        <field name="header_line" eval="False"/>
+        <field name="dpi">90</field>
+    </record>
+
+    <template id="report_manifiesto_carga">
+        <t t-call="web.html_container">
+            <t t-call="web.basic_layout">
+                <div class="page">
+                    <h1 class="text-center" style="font-size: 20px; font-weight: 700; margin-bottom: 18px;">Manifiesto de carga</h1>
+
+                    <t t-set="first_invoice" t-value="docs and docs[0] or False"/>
+
+                    <table class="table table-sm table-borderless mb-3" style="font-size: 13px; width: 100%;">
+                        <tbody>
+                            <tr>
+                                <td style="width: 2%; font-weight: 700; white-space: nowrap; border: 0;">Fecha:</td>
+                                <td style="width: 22%; white-space: nowrap; border: 0;">
+                                    <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y %H:%M:%S')"/>
+                                </td>
+
+                                <td style="width: 2%; font-weight: 700; white-space: nowrap; border: 0;">Ordenante:</td>
+                                <td style="width: 33%; border: 0;">
+                                    <span t-esc="(first_invoice and first_invoice.company_id.partner_id.display_name) or ''"/>
+                                </td>
+
+                                <td style="width: 1%; font-weight: 700; white-space: nowrap; border: 0;">Expediciones:</td>
+                                <td style="width: 1%; border: 0;">
+                                    <span t-esc="len(docs)"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <table class="table table-sm" style="font-size: 12px; border-collapse: collapse; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; border-top: 0; border-left: 0; border-bottom: 1px solid #000;">Expedición</th>
+                                <th style="text-align: left; border-top: 0; border-bottom: 1px solid #000;">Ref</th>
+                                <th style="text-align: left; border-top: 0; border-bottom: 1px solid #000;">Servicio</th>
+                                <th style="text-align: left; border-top: 0; border-bottom: 1px solid #000;">Destinatario</th>
+                                <th style="text-align: left; border-top: 0; border-bottom: 1px solid #000;">Dirección</th>
+                                <th class="text-end" style="border-top: 0; border-bottom: 1px solid #000;">Bultos</th>
+                                <th class="text-end" style="border-top: 0; border-bottom: 1px solid #000;">Peso</th>
+                                <th class="text-end" style="border-top: 0; border-bottom: 1px solid #000; border-right: 0;">Vol</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-set="total_bultos" t-value="0"/>
+                            <t t-set="total_peso" t-value="0"/>
+                            <t t-set="total_vol" t-value="0"/>
+
+                            <t t-foreach="docs" t-as="o">
+                                <t t-set="pickings" t-value="o.invoice_line_ids.sale_line_ids.move_ids.mapped('picking_id').filtered(lambda p: p.state == 'done' and p.picking_type_id.code == 'outgoing').sorted(key=lambda p: p.date_done or p.create_date)"/>
+                                <t t-set="picking" t-value="pickings and pickings[-1] or False"/>
+                                <t t-set="dest_partner" t-value="(picking and picking.partner_id) or o.partner_id"/>
+
+                                <t t-set="sale_orders" t-value="o.invoice_line_ids.sale_line_ids.order_id.sudo()"/>
+
+                                <t t-set="net_weight" t-value="0"/>
+                                <t t-set="gross_weight" t-value="0"/>
+                                <t t-set="volume" t-value="0.0"/>
+                                <t t-set="normal_lines" t-value="[]"/>
+                                <t t-set="has_special_package" t-value="False"/>
+
+                                <t t-foreach="sale_orders" t-as="so">
+                                    <t t-set="valid_pickings" t-value="so.picking_ids.filtered(lambda p: p.state == 'done' and p.picking_type_id.code == 'outgoing').sorted(key=lambda p: p.date_done or p.create_date)"/>
+
+                                    <t t-if="valid_pickings">
+                                        <t t-set="last_picking" t-value="valid_pickings[-1]"/>
+
+                                        <t t-foreach="last_picking.move_line_ids" t-as="ml">
+                                            <t t-if="ml.product_id and ml.qty_done &gt; 0">
+                                                <t t-set="pname" t-value="(ml.product_id.display_name or ml.product_id.name or '').lower()"/>
+
+                                                <t t-if="ml.qty_done &lt; 10 or 'percha' in pname or 'hanger' in pname or 'taco' in pname or 'pestaña' in pname">
+                                                    <t t-set="has_special_package" t-value="True"/>
+                                                </t>
+
+                                                <t t-if="ml.qty_done &gt;= 10 and not ('percha' in pname or 'hanger' in pname or 'taco' in pname or 'pestaña' in pname)">
+                                                    <t t-set="normal_lines" t-value="normal_lines + [ml]"/>
+                                                </t>
+
+                                                <t t-if="ml.lot_id and ml.lot_id.weight and ml.lot_id.iniciaal_quatity and ml.lot_id.iniciaal_quatity != 0">
+                                                    <t t-set="line_weight" t-value="(ml.qty_done * ml.lot_id.weight) / ml.lot_id.iniciaal_quatity"/>
+                                                    <t t-set="net_weight" t-value="net_weight + line_weight"/>
+                                                    <t t-set="gross_weight" t-value="gross_weight + line_weight + 1"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-set="net_weight" t-value="net_weight + (ml.qty_done * 5)"/>
+                                                    <t t-set="gross_weight" t-value="gross_weight + (ml.qty_done * 6)"/>
+                                                </t>
+
+                                                <t t-if="'280' in pname">
+                                                    <t t-set="line_volume" t-value="7.80"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-set="line_volume" t-value="4.86"/>
+                                                </t>
+                                                <t t-set="volume" t-value="volume + line_volume"/>
+                                            </t>
+                                        </t>
+                                    </t>
+                                </t>
+
+                                <t t-set="volume" t-value="volume / 100"/>
+                                <t t-set="package_units" t-value="len(normal_lines) + (1 if has_special_package else 0)"/>
+
+                                <t t-set="bultos" t-value="package_units"/>
+                                <t t-set="peso" t-value="round(gross_weight, 0)"/>
+                                <t t-set="vol" t-value="round(volume, 2)"/>
+
+                                <t t-set="total_bultos" t-value="total_bultos + bultos"/>
+                                <t t-set="total_peso" t-value="total_peso + peso"/>
+                                <t t-set="total_vol" t-value="total_vol + vol"/>
+
+                                <tr>
+                                    <td style="border-left: 0; border-bottom: 1px solid #000;">
+                                        <span t-esc="picking and picking.name or o.name or ''"/>
+                                    </td>
+                                    <td style="border-bottom: 1px solid #000;">
+                                        <span t-esc="o.ref or o.payment_reference or ''"/>
+                                    </td>
+                                    <td style="border-bottom: 1px solid #000;">
+                                        <span t-esc="picking and picking.carrier_id and picking.carrier_id.name or ''"/>
+                                    </td>
+                                    <td style="border-bottom: 1px solid #000;">
+                                        <span t-esc="dest_partner.display_name or ''"/>
+                                    </td>
+                                    <td style="border-bottom: 1px solid #000;">
+                                        <span t-esc="' '.join(filter(None, [
+                                            dest_partner.street or '',
+                                            dest_partner.street2 or '',
+                                            dest_partner.zip or '',
+                                            dest_partner.city or '',
+                                            dest_partner.state_id.name or '',
+                                            dest_partner.country_id.name or '',
+                                        ]))"/>
+                                    </td>
+                                    <td class="text-end" style="border-bottom: 1px solid #000;">
+                                        <span t-esc="bultos"/>
+                                    </td>
+                                    <td class="text-end" style="border-bottom: 1px solid #000;">
+                                        <span t-esc="peso"/>
+                                    </td>
+                                    <td class="text-end" style="border-bottom: 1px solid #000; border-right: 0;">
+                                        <span t-esc="vol"/>
+                                    </td>
+                                </tr>
+                            </t>
+
+                            <tr>
+                                <td colspan="5" style="font-weight: 700; text-align: right; border-left: 0;">
+                                    Totales
+                                </td>
+                                <td class="text-end" style="font-weight: 700;">
+                                    <span t-esc="total_bultos"/>
+                                </td>
+                                <td class="text-end" style="font-weight: 700;">
+                                    <span t-esc="total_peso"/>
+                                </td>
+                                <td class="text-end" style="font-weight: 700;">
+                                    <span t-esc="total_vol"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="row mt-5" style="font-size: 12px;">
+                        <div class="col-6">
+                            <p style="font-weight: 700; margin-bottom: 26px;">Conformidad de las partes</p>
+                            <div style="border: 1px solid #000; min-height: 130px; padding: 12px;">
+                                <p style="margin-bottom: 10px;"><strong>Transportista</strong></p>
+                                <p style="margin-bottom: 30px;">Firma/Sello</p>
+                                <p style="margin-bottom: 0;">NIF</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <p style="font-weight: 700; margin-bottom: 26px;">&#160;</p>
+                            <div style="border: 1px solid #000; min-height: 130px; padding: 12px;">
+                                <p style="margin-bottom: 10px;"><strong>CLIENTE</strong></p>
+                                <p style="margin-bottom: 30px;">Firma/Sello</p>
+                                <p style="margin-bottom: 0;">NIF</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_manifiesto_carga" model="ir.actions.report">
+        <field name="name">Manifiesto de carga</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">account_manifiesto_carga.report_manifiesto_carga</field>
+        <field name="report_file">account_manifiesto_carga.report_manifiesto_carga</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="paperformat_manifiesto_carga"/>
+        <field name="print_report_name">'Manifiesto de carga - %s' % (object.name or '')</field>
+    </record>
+</odoo> 
+
+
+
+    <template id="report_manifiesto_carga">
+        <t t-call="web.html_container">
+            <t t-call="web.basic_layout">
+                <div class="page">
+                    <h1 class="text-center" style="font-size: 20px; font-weight: 700; margin-bottom: 18px;">
+                        Manifiesto de carga
+                    </h1>
+
+                    <t t-set="first_invoice" t-value="docs and docs[0] or False"/>
+
+                    <table class="table table-sm table-borderless mb-3" style="font-size: 13px; width: 100%;">
+                        <tbody>
+                            <tr>
+                                <td style="width: 2%; font-weight: 700; white-space: nowrap; border: 0;">Fecha:</td>
+                                <td style="width: 22%; white-space: nowrap; border: 0;">
+                                    <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y %H:%M:%S')"/>
+                                </td>
+
+                                <td style="width: 2%; font-weight: 700; white-space: nowrap; border: 0;">Ordenante:</td>
+                                <td style="width: 33%; border: 0;">
+                                    <span t-esc="(first_invoice and first_invoice.company_id.partner_id.display_name) or ''"/>
+                                </td>
+
+                                <td style="width: 1%; font-weight: 700; white-space: nowrap; border: 0;">Expediciones:</td>
+                                <td style="width: 1%; border: 0;">
+                                    <span t-esc="len(docs)"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <table class="table table-sm" style="font-size: 12px; border-collapse: collapse; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; border-top: 0; border-left: 0; border-bottom: 1px solid #000;">Expedición</th>
+                                <th style="text-align: left; border-top: 0; border-bottom: 1px solid #000;">Ref</th>
+                                <th style="text-align: left; border-top: 0; border-bottom: 1px solid #000;">Servicio</th>
+                                <th style="text-align: left; border-top: 0; border-bottom: 1px solid #000;">Destinatario</th>
+                                <th style="text-align: left; border-top: 0; border-bottom: 1px solid #000;">Dirección</th>
+                                <th class="text-end" style="border-top: 0; border-bottom: 1px solid #000;">Bultos</th>
+                                <th class="text-end" style="border-top: 0; border-bottom: 1px solid #000;">Peso</th>
+                                <th class="text-end" style="border-top: 0; border-bottom: 1px solid #000; border-right: 0;">Vol</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-set="total_bultos" t-value="0"/>
+                            <t t-set="total_peso" t-value="0"/>
+                            <t t-set="total_vol" t-value="0.0"/>
+
+                            <t t-foreach="docs" t-as="o">
+                                <t t-set="pickings" t-value="o.invoice_line_ids.sale_line_ids.move_ids.mapped('picking_id').filtered(lambda p: p.state == 'done' and p.picking_type_id.code == 'outgoing').sorted(key=lambda p: p.date_done or p.create_date)"/>
+                                <t t-set="picking" t-value="pickings and pickings[-1] or False"/>
+                                <t t-set="dest_partner" t-value="(picking and picking.partner_id) or o.partner_id"/>
+
+                                <t t-set="sale_orders" t-value="o.invoice_line_ids.mapped('sale_line_ids.order_id').sudo()"/>
+
+                                <t t-set="net_weight" t-value="0.0"/>
+                                <t t-set="gross_weight" t-value="0.0"/>
+                                <t t-set="volume" t-value="0.0"/>
+                                <t t-set="normal_lines" t-value="[]"/>
+                                <t t-set="has_special_package" t-value="False"/>
+
+                                <t t-foreach="sale_orders" t-as="so">
+                                    <t t-set="valid_pickings" t-value="so.picking_ids.filtered(lambda p: p.state == 'done' and p.picking_type_id.code == 'outgoing').sorted(key=lambda p: p.date_done or p.create_date)"/>
+
+                                    <t t-if="valid_pickings">
+                                        <t t-set="last_picking" t-value="valid_pickings[-1]"/>
+
+                                        <t t-foreach="last_picking.move_line_ids" t-as="ml">
+                                            <t t-if="ml.product_id and ml.quantity &gt; 0">
+                                                <t t-set="pname" t-value="(ml.product_id.display_name or ml.product_id.name or '').lower()"/>
+
+                                                <t t-if="ml.quantity &lt; 10 or 'percha' in pname or 'hanger' in pname or 'taco' in pname or 'pestaña' in pname">
+                                                    <t t-set="has_special_package" t-value="True"/>
+                                                </t>
+
+                                                <t t-if="ml.quantity &gt;= 10 and not ('percha' in pname or 'hanger' in pname or 'taco' in pname or 'pestaña' in pname)">
+                                                    <t t-set="normal_lines" t-value="normal_lines + [ml]"/>
+                                                </t>
+
+                                                <t t-if="ml.lot_id and ml.lot_id.weight and ml.lot_id.iniciaal_quatity and ml.lot_id.iniciaal_quatity != 0">
+                                                    <t t-set="line_weight" t-value="(ml.quantity * ml.lot_id.weight) / ml.lot_id.iniciaal_quatity"/>
+                                                    <t t-set="net_weight" t-value="net_weight + line_weight"/>
+                                                    <t t-set="gross_weight" t-value="gross_weight + line_weight + 1"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-set="net_weight" t-value="net_weight + (ml.quantity * 5)"/>
+                                                    <t t-set="gross_weight" t-value="gross_weight + (ml.quantity * 6)"/>
+                                                </t>
+
+                                                <t t-if="'280' in pname">
+                                                    <t t-set="line_volume" t-value="7.80"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-set="line_volume" t-value="4.86"/>
+                                                </t>
+                                                <t t-set="volume" t-value="volume + line_volume"/>
+                                            </t>
+                                        </t>
+                                    </t>
+                                </t>
+
+                                <t t-set="volume" t-value="volume / 100"/>
+                                <t t-set="package_units_calc" t-value="len(normal_lines) + (1 if has_special_package else 0)"/>
+                                <t t-set="bultos" t-value="package_units_calc or 0"/>
+                                <t t-set="peso_calc" t-value="int(round(gross_weight, 0))"/>
+                                <t t-set="peso" t-value="peso_calc if peso_calc else int(round((picking and picking.weight) or 0, 0))"/>
+                                <t t-set="vol" t-value="round(volume, 2)"/>
+
+                                <t t-set="total_bultos" t-value="total_bultos + bultos"/>
+                                <t t-set="total_peso" t-value="total_peso + peso"/>
+                                <t t-set="total_vol" t-value="total_vol + vol"/>
+
+                                <tr>
+                                    <td style="border-left: 0; border-bottom: 1px solid #000;">
+                                        <span t-esc="(picking and picking.name) or o.name or ''"/>
+                                    </td>
+                                    <td style="border-bottom: 1px solid #000;">
+                                        <span t-esc="o.ref or o.payment_reference or o.name or ''"/>
+                                    </td>
+                                    <td style="border-bottom: 1px solid #000;">
+                                        <span t-esc="(picking and picking.carrier_id and picking.carrier_id.name) or ''"/>
+                                    </td>
+                                    <td style="border-bottom: 1px solid #000;">
+                                        <span t-esc="dest_partner.display_name or ''"/>
+                                    </td>
+                                    <td style="border-bottom: 1px solid #000;">
+                                        <span t-esc="' '.join(filter(None, [
+                                            dest_partner.street or '',
+                                            dest_partner.street2 or '',
+                                            dest_partner.zip or '',
+                                            dest_partner.city or '',
+                                            dest_partner.state_id.name or '',
+                                            dest_partner.country_id.name or '',
+                                        ]))"/>
+                                    </td>
+                                    <td class="text-end" style="border-bottom: 1px solid #000;">
+                                        <span t-esc="bultos"/>
+                                    </td>
+                                    <td class="text-end" style="border-bottom: 1px solid #000;">
+                                        <span t-esc="peso"/>
+                                    </td>
+                                    <td class="text-end" style="border-bottom: 1px solid #000; border-right: 0;">
+                                        <span t-esc="vol"/>
+                                    </td>
+                                </tr>
+                            </t>
+
+                            <tr>
+                                <td colspan="5" style="font-weight: 700; text-align: right; border-left: 0;">
+                                    Totales
+                                </td>
+                                <td class="text-end" style="font-weight: 700;">
+                                    <span t-esc="total_bultos"/>
+                                </td>
+                                <td class="text-end" style="font-weight: 700;">
+                                    <span t-esc="total_peso"/>
+                                </td>
+                                <td class="text-end" style="font-weight: 700;">
+                                    <span t-esc="round(total_vol, 2)"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="row mt-5" style="font-size: 12px;">
+                        <div class="col-6">
+                            <p style="font-weight: 700; margin-bottom: 26px;">Conformidad de las partes</p>
+                            <div style="border: 1px solid #000; min-height: 130px; padding: 12px;">
+                                <p style="margin-bottom: 10px;"><strong>Transportista</strong></p>
+                                <p style="margin-bottom: 30px;">Firma/Sello</p>
+                                <p style="margin-bottom: 0;">NIF</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <p style="font-weight: 700; margin-bottom: 26px;">&#160;</p>
+                            <div style="border: 1px solid #000; min-height: 130px; padding: 12px;">
+                                <p style="margin-bottom: 10px;"><strong>CLIENTE</strong></p>
+                                <p style="margin-bottom: 30px;">Firma/Sello</p>
+                                <p style="margin-bottom: 0;">NIF</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template> -->
