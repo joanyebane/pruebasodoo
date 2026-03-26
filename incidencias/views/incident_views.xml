@@ -83,6 +83,7 @@
                 <group expand="0" string="Agrupar por">
                     <filter string="Estado" name="group_state" context="{'group_by': 'state'}"/>
                     <filter string="Responsable" name="group_assigned" context="{'group_by': 'assigned_id'}"/>
+                    <filter string="Prioridad" name="group_priority" context="{'group_by': 'priority'}"/>
                 </group>
             </search>
         </field>
@@ -94,6 +95,8 @@
         <field name="view_mode">tree,form</field>
     </record>
 
+    <menuitem id="menu_incidencias_root" name="Incidencias" sequence="10" groups="base.group_user"/>
+    <menuitem id="menu_incidencias_request" name="Solicitudes" parent="menu_incidencias_root" action="action_incidencias_request" sequence="20" groups="base.group_user"/>
     <menuitem id="menu_incidencias_root" name="Incidencias" sequence="10" groups="incidencias.group_incident_user"/>
     <menuitem id="menu_incidencias_request" name="Solicitudes" parent="menu_incidencias_root" action="action_incidencias_request" sequence="20"/>
 </odoo>
